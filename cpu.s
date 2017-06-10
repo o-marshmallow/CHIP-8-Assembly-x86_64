@@ -23,27 +23,95 @@ execute_cpu:
         ## From here, only %rax is used
 OP0:    cmp %rax, 0x00E0
         jne RET
-        ## CLEAR SCREEN
+        ## CLS
+        lea %rdi, screen
+        xor %rsi, %rsi
+        mov %rdx, 64*32         # Number of integers for screen array
+        call memset
         jmp inc_and_return
+        
 RET:    cmp %rax, 0x00EE
         jne unknown_opcode
-
-        jmp inc_and_return
+        ## RET
+        
+        
+        jmp return
 OP1:
+        ## JP addr
+        and %rax, 0x0FFF
+        mov WORD PTR [pc], %ax
+        jmp return
 OP2:
+        ## CALL addr
+        dec BYTE PTR [sp]       # Decrement StackPointer
+        lea %rdx, stack
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [sp]  # Load SP in lowest byte of rcx
+        imul %rcx, 2            # Size of elements in stack = 2
+        add %rdx, %rcx
+        ## Load PC into RCX
+        xor %rcx, %rcx
+        mov %cx, WORD PTR [pc]
+        ## Put PC onto the stack
+        mov WORD PTR [%rdx], %cx
+        ## Change the PC and finish this instruction
+        and %rax, 0x0FFF        # Rax contains the address to jump to
+        mov WORD PTR [pc], %ax  # Jump the machine to (instr & 0xFFF)
+        jmp return
 OP3:
+        ## 3xkk - SE Vx, byte
+        ## rcx contains x then Vx
+        mov %rcx, %rax
+        shr %rcx, 8
+        and %rcx, 0xF
+        lea %rdx, regs
+        add %rdx, %rcx
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [%rdx]
+        ## rdx contains kk
+        mov %rdx, %rax
+        and %rdx, 0xFF
+        ## Compare rcx and rdx
+        cmp %rcx, %rdx
+        jne inc_and_return
+        inc WORD PTR [pc]
+        inc WORD PTR [pc]
+        jmp inc_and_return
 OP4:
+        ## SNE Vx, byte
+        jmp inc_and_return
 OP5:
+        ## SE Vx, Vy
+        jmp inc_and_return
 OP6:
+        ## LD Vx, byte
+        jmp inc_and_return
 OP7:
+        ## ADD Vx, byte
+        jmp inc_and_return
 OP8:
+        ## 8xy- Instructions
+        jmp inc_and_return
 OP9:
+        ## SNE Vx, Vy
+        jmp inc_and_return
 OPA:
+        ##  LD I, addr
+        jmp inc_and_return
 OPB:
+        ##  JP V0, addr
+        jmp inc_and_return
 OPC:
+        ## RND Vx, byte
+        jmp inc_and_return
 OPD:
+        ## DRW Vx, Vy, nibble
+        jmp inc_and_return
 OPE:
+        ## Ex-- instructions
+        jmp inc_and_return
 OPF:
+        ## Fx-- instructions
 
 inc_and_return:
         inc WORD PTR [pc]
