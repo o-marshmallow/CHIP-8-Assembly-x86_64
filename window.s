@@ -1,11 +1,12 @@
         .intel_syntax
-        .globl window
+        .globl window_loop
         .set SDL_INIT_VIDEO, 0x20
         .set WIDTH, 640         # 64 blocs of 10 pixels each
         .set HEIGHT, 320
         .text
         
-window: push %rbp
+window_loop:
+        push %rbp
         mov %rbp, %rsp
         sub %rsp, 16
         ## Window will be stored in rsp, whereas renderer is in rsp+8
@@ -16,6 +17,7 @@ window: push %rbp
         lea %r8 , [%rsp+8] 
         call SDL_CreateWindowAndRenderer
         ## Store Window in R12 and Renderer in R13
+        ## As their address is not needed anymore
         mov %r12, [%rsp]
         mov %r13, [%rsp+8]
         ## Test whether window is null or not
@@ -31,17 +33,36 @@ window: push %rbp
         call SDL_SetRenderDrawColor
 
         ## Main loop
-begin:  mov %rdi, %r13
+begin:
+        ## Test events
+        xor %rax, %rax
+        lea %rdi, event
+        call SDL_PollEvent
+        cmp %rax, 0
+        je endevt
+        ## Event.type is a 32-bit value
+        xor %rax, %rax
+        mov %eax, [event]
+        cmp %eax, 256           # SDL_QUIT = 256
+        je  dtroy               # if SDL_QUIT, break the loop
+endevt:
+        ## Draw rectangles depending on the screen informations
+        mov %rdi, %r13
+        call render_screen
+        mov %rdi, %r12
+        call SDL_UpdateWindowSurface
+        ## Render window
+        mov %rdi, %r13
         call SDL_RenderPresent
         pause
         jmp begin
         
-        ## Destroy and quit SDL
-        xor %rax, %rax
+        ## Destroy
+dtroy:  xor %rax, %rax
         mov %rdi, %r12
         call SDL_DestroyWindow
         call SDL_Quit
-return: sub %rsp, 16
+return: add %rsp, 16
         pop %rbp
         ret
 
@@ -52,3 +73,8 @@ error:  xor %rax, %rax
 
         .data
 winerr: .asciz "Could not create window\n"
+
+        .bss
+event:  .space 64               # Sizeof(SDL_Event) = 56
+        
+        

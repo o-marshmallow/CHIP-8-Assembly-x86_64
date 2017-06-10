@@ -34,7 +34,7 @@ main:
         lea %rdi, loaded
         xor %rax, %rax
         call printf
-        call window
+        call window_loop
         ret
         
         ## Error launching the emulator, invalid arguments on startup
