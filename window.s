@@ -32,7 +32,10 @@ window_loop:
         mov %r8,  0xFF
         call SDL_SetRenderDrawColor
 
-        ## Main loop
+        ## Init the CPU and main loop
+        call load_jumptable
+        mov WORD PTR [pc], 0x200
+        mov BYTE PTR [sp], 0xF
 begin:
         ## Test events
         xor %rax, %rax
@@ -46,11 +49,12 @@ begin:
         cmp %eax, 256           # SDL_QUIT = 256
         je  dtroy               # if SDL_QUIT, break the loop
 endevt:
+        ## Execute an instruction of the CHIP-8 machine
+        call execute_cpu
+        ## Should clean the screen here first with SDL_RenderClear
         ## Draw rectangles depending on the screen informations
         mov %rdi, %r13
         call render_screen
-        mov %rdi, %r12
-        call SDL_UpdateWindowSurface
         ## Render window
         mov %rdi, %r13
         call SDL_RenderPresent

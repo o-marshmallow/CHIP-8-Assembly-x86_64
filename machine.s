@@ -22,5 +22,8 @@ ram:    .byte 0xF0,0x90,0x90,0x90,0xF0,0x20,0x60,0x20
 regs:   .space 0xF
 pc:     .space 2
 sp:     .space 1
+ireg:   .space 2
+dt:     .space 2
+st:     .space 2
 stack:  .space 0xF*2            # Stack is 16 16-bit array
 screen: .space 64*32            # Screen size is 64*32 pixels
