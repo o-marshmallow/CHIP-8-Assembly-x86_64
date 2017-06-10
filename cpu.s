@@ -33,8 +33,10 @@ OP0:    cmp %rax, 0x00E0
 RET:    cmp %rax, 0x00EE
         jne unknown_opcode
         ## RET
-        
-        
+        ## First get the address from the stack
+        ## TODO
+        ## Then increment SP
+        inc BYTE PTR [sp]
         jmp return
 OP1:
         ## JP addr
@@ -79,6 +81,22 @@ OP3:
         jmp inc_and_return
 OP4:
         ## SNE Vx, byte
+        ## rcx contains x then Vx
+        mov %rcx, %rax
+        shr %rcx, 8
+        and %rcx, 0xF
+        lea %rdx, regs
+        add %rdx, %rcx
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [%rdx]
+        ## rdx contains kk
+        mov %rdx, %rax
+        and %rdx, 0xFF
+        ## Compare rcx and rdx
+        cmp %rcx, %rdx
+        je inc_and_return
+        inc WORD PTR [pc]
+        inc WORD PTR [pc]
         jmp inc_and_return
 OP5:
         ## SE Vx, Vy
