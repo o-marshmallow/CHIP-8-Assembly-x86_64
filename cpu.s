@@ -33,8 +33,17 @@ OP0:    cmp %rax, 0x00E0
 RET:    cmp %rax, 0x00EE
         jne unknown_opcode
         ## RET
-        ## First get the address from the stack
-        ## TODO
+        ## Put the address of the return address in rdx
+        lea %rdx, stack
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [sp]
+        imul %rcx, 2
+        add %rdx, %rcx
+        ## Get return address from rdx and put it into rcx
+        xor %rcx, %rcx
+        mov %cx, WORD PTR [%rdx]
+        ## Load it into PC
+        mov WORD PTR [pc], %cx
         ## Then increment SP
         inc BYTE PTR [sp]
         jmp return
@@ -99,7 +108,40 @@ OP4:
         inc WORD PTR [pc]
         jmp inc_and_return
 OP5:
-        ## SE Vx, Vy
+OP9:    
+        ## SE/SNE Vx, Vy
+        ## Load Vx into rcx
+        mov %rcx, %rax
+        and %rcx, 0x0F00
+        shr %rcx, 8
+        lea %rdx, regs
+        mov %rsi, %rdx          # rsi will be used for loading Vy
+        add %rdx, %rcx
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [%rdx]
+        ## And Vy into rdx
+        mov %rdx, %rax
+        and %rdx, 0x00F0
+        shr %rdx, 4
+        add %rsi, %rdx
+        xor %rdx, %rdx
+        mov %dl, BYTE PTR [%rsi]
+        ## Compare Vx and Vy
+        mov %rsi, %rax
+        shr %rsi, 12
+        cmp %rsi, 5             # Test whether the instruction is SE or SNE
+        jne case9
+        ## SE case
+        cmp %rcx, %rdx
+        jne inc_and_return
+        inc WORD PTR [pc]
+        inc WORD PTR [pc]
+        jmp inc_and_return
+case9:  # SNE case
+        cmp %rcx, %rdx
+        je inc_and_return
+        inc WORD PTR [pc]
+        inc WORD PTR [pc]
         jmp inc_and_return
 OP6:
         ## LD Vx, byte
@@ -109,9 +151,6 @@ OP7:
         jmp inc_and_return
 OP8:
         ## 8xy- Instructions
-        jmp inc_and_return
-OP9:
-        ## SNE Vx, Vy
         jmp inc_and_return
 OPA:
         ##  LD I, addr
