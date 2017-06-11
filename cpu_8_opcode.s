@@ -3,14 +3,8 @@
         .intel_syntax
         .globl opcode_8
         .globl load_jumptable_8
-        .globl opcode_f
-        .globl opcode_e
-        .globl opcode_d
         .include "macros.s"
         .text
-opcode_d:
-opcode_e:
-opcode_f:
         
 opcode_8:
         mov %rcx, %rax
@@ -19,23 +13,100 @@ opcode_8:
         jmp %rcx
 ld_8:
         ## LD Vx, Vy
+        ADDR_Vx                 # &Vx in rcx
+        LOAD_Vy                 # Vy in rdx
+        mov BYTE PTR [%rcx], %dl
+        ret
 or_8:
         ## OR Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 # Vx in rcx
+        LOAD_Vy                 # Vy in rdx
+        or %cl, %dl
+        mov BYTE PTR [%rdi], %cl
+        ret
 and_8:
         ## AND Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 # Vx in rcx
+        LOAD_Vy                 # Vy in rdx
+        and %cl, %dl
+        mov BYTE PTR [%rdi], %cl
+        ret
 xor_8:
         ## XOR Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 # Vx in rcx
+        LOAD_Vy                 # Vy in rdx
+        xor %cl, %dl
+        mov BYTE PTR [%rdi], %cl
+        ret
 add_8:
         ## ADD Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 # Vx in rcx
+        LOAD_Vy                 # Vy in rdx
+        add %cx, %dx
+        mov BYTE PTR [%rdi], %cl
+        cmp %cx, 0xFF
+        jng return
+        mov BYTE PTR [regs+0xF], 1
+        ret
 sub_8:
         ## SUB Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 #  Vx in rcx
+        LOAD_Vy                 #  Vy in rdx
+        sub %cx, %dx
+        mov BYTE PTR [%rdi], %cl
+        cmp %cx, 0
+        jge return
+        mov BYTE PTR [regs+0xF], 1
+        ret
 shr_8:
         ## SHR Vx
+        LOAD_Vx
+        mov %rdx, %rcx          #  Vx in rdx
+        ADDR_Vx                 # &Vx in rcx
+        mov %rdi, %rdx
+        and %rdi, 1             # rdi = Vx & 1
+        shr %rdx, 1
+        mov BYTE PTR [%rcx], %dl
+        cmp %dil, 1
+        jne return
+        mov BYTE PTR [regs+0xF], 1
+        ret
 subn_8:
         ## SUBN Vx, Vy
+        ADDR_Vx
+        mov %rdi, %rcx          # &Vx in rdi
+        LOAD_Vx                 #  Vx in rcx
+        LOAD_Vy                 #  Vy in rdx
+        xchg %rcx, %rdx
+        sub %cx, %dx
+        mov BYTE PTR [%rdi], %cl
+        cmp %cx, 0
+        jge return
+        mov BYTE PTR [regs+0xF], 1
+        ret
 shl_8:
         ## SHL Vx, Vy
-        ret
+        LOAD_Vx
+        mov %rdx, %rcx          #  Vx in rdx
+        ADDR_Vx                 # &Vx in rcx
+        mov %rdi, %rdx
+        shr %rdi, 7             # rdi = Vx >> 7
+        shl %rdx, 1
+        mov BYTE PTR [%rcx], %dl
+        cmp %dil, 1
+        jne return
+        mov BYTE PTR [regs+0xF], 1
+return: ret
 
 
 load_jumptable_8:
