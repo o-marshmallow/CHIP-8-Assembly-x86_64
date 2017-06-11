@@ -2,26 +2,9 @@
         .intel_syntax
         .globl execute_cpu
         .globl load_jumptable
-        .set PTR_SIZE, 8
+        .globl unknown_opcode
+        .include "macros.s"
         .text
-        .macro LOAD_Vx tmpreg
-        mov %rcx, %rax
-        and %rcx, 0x0F00
-        shr %rcx, 8
-        lea \tmpreg, regs
-        add \tmpreg, %rcx
-        xor %rcx, %rcx
-        mov %cl, BYTE PTR [\tmpreg]
-        .endm
-        .macro LOAD_Vy tmpreg
-        mov %rdx, %rax
-        and %rdx, 0x00F0
-        shr %rdx, 4
-        lea \tmpreg, regs
-        add \tmpreg, %rdx
-        xor %rdx, %rdx
-        mov %dl, BYTE PTR [\tmpreg]
-        .endm
 execute_cpu:
         push %rbp
         mov %rbp, %rsp
@@ -89,7 +72,7 @@ OP2:
 OP3:
         ## 3xkk - SE Vx, byte
         ## rcx contains x then Vx
-        LOAD_Vx %rdx
+        LOAD_Vx
         ## rdx contains kk
         mov %rdx, %rax
         and %rdx, 0xFF
@@ -102,7 +85,7 @@ OP3:
 OP4:
         ## SNE Vx, byte
         ## rcx contains x then Vx
-        LOAD_Vx %rdx
+        LOAD_Vx
         ## rdx contains kk
         mov %rdx, %rax
         and %rdx, 0xFF
@@ -116,9 +99,9 @@ OP5:
 OP9:    
         ## SE/SNE Vx, Vy
         ## Load Vx into rcx
-        LOAD_Vx %rdx
+        LOAD_Vx
         ## And Vy into rdx
-        LOAD_Vy %rsi
+        LOAD_Vy
         ## Compare Vx and Vy
         mov %rsi, %rax
         shr %rsi, 12
@@ -138,33 +121,69 @@ case9:  # SNE case
         jmp inc_and_return
 OP6:
         ## LD Vx, byte
-        LOAD_Vx %rdx
-        
+        ADDR_Vx
+        ## Load kk into rdx
+        mov %rdx, %rax
+        and %rdx, 0xFF
+        ## Store lowest byte into Vx
+        mov BYTE PTR [%rcx], %dl
         jmp inc_and_return
 OP7:
         ## ADD Vx, byte
+        LOAD_Vx
+        mov %rdi, %rcx          # rdi contains the value Vx
+        ADDR_Vx                 # rcx contains the address of Vx
+        ## Load kk into rdx
+        mov %rdx, %rax
+        and %rdx, 0xFF
+        add %dil, %dl            # rdi += rdx
+        mov BYTE PTR [%rcx], %dil
         jmp inc_and_return
 OP8:
         ## 8xy- Instructions
+        call opcode_8
         jmp inc_and_return
 OPA:
         ##  LD I, addr
+        mov %rcx, %rax
+        and %rcx, 0xFFF
+        mov WORD PTR [ireg], %cx
         jmp inc_and_return
 OPB:
         ##  JP V0, addr
-        jmp inc_and_return
+        mov %rcx, %rax
+        and %rcx, 0xFFF
+        xor %rdx, %rdx
+        mov %dl, [regs]
+        add %rcx, %rdx
+        mov WORD PTR [pc], %cx
+        jmp return
 OPC:
         ## RND Vx, byte
+        ## For randomness, let's take the current clock
+        push %rax
+        rdtsc
+        mov %rdi, %rax
+        pop %rax
+        ## Load &Vx and kk
+        ADDR_Vx                 
+        mov %rdx, %rax
+        and %rdx, 0xFF
+        add %dl, %dil           # kk += random
+        mov BYTE PTR [%rcx], %dl
         jmp inc_and_return
 OPD:
         ## DRW Vx, Vy, nibble
+        call opcode_d
         jmp inc_and_return
 OPE:
         ## Ex-- instructions
+        call opcode_e
         jmp inc_and_return
 OPF:
         ## Fx-- instructions
-
+        call opcode_f
+        
 inc_and_return:
         inc WORD PTR [pc]
         inc WORD PTR [pc]
@@ -204,6 +223,9 @@ unknown_opcode:
 load_jumptable:
         push %rbp
         mov %rbp, %rsp
+
+        call load_jumptable_8
+        
         ## Load the address in the table
         lea %rax, OP0
         mov [jmptable], %rax

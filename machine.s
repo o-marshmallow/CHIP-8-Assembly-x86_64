@@ -4,6 +4,7 @@
         .globl sp
         .globl stack
         .globl screen
+        .globl ireg
         
         .data
 ram:    .byte 0xF0,0x90,0x90,0x90,0xF0,0x20,0x60,0x20
