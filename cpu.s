@@ -4,7 +4,24 @@
         .globl load_jumptable
         .set PTR_SIZE, 8
         .text
-
+        .macro LOAD_Vx tmpreg
+        mov %rcx, %rax
+        and %rcx, 0x0F00
+        shr %rcx, 8
+        lea \tmpreg, regs
+        add \tmpreg, %rcx
+        xor %rcx, %rcx
+        mov %cl, BYTE PTR [\tmpreg]
+        .endm
+        .macro LOAD_Vy tmpreg
+        mov %rdx, %rax
+        and %rdx, 0x00F0
+        shr %rdx, 4
+        lea \tmpreg, regs
+        add \tmpreg, %rdx
+        xor %rdx, %rdx
+        mov %dl, BYTE PTR [\tmpreg]
+        .endm
 execute_cpu:
         push %rbp
         mov %rbp, %rsp
@@ -72,13 +89,7 @@ OP2:
 OP3:
         ## 3xkk - SE Vx, byte
         ## rcx contains x then Vx
-        mov %rcx, %rax
-        shr %rcx, 8
-        and %rcx, 0xF
-        lea %rdx, regs
-        add %rdx, %rcx
-        xor %rcx, %rcx
-        mov %cl, BYTE PTR [%rdx]
+        LOAD_Vx %rdx
         ## rdx contains kk
         mov %rdx, %rax
         and %rdx, 0xFF
@@ -91,13 +102,7 @@ OP3:
 OP4:
         ## SNE Vx, byte
         ## rcx contains x then Vx
-        mov %rcx, %rax
-        shr %rcx, 8
-        and %rcx, 0xF
-        lea %rdx, regs
-        add %rdx, %rcx
-        xor %rcx, %rcx
-        mov %cl, BYTE PTR [%rdx]
+        LOAD_Vx %rdx
         ## rdx contains kk
         mov %rdx, %rax
         and %rdx, 0xFF
@@ -111,21 +116,9 @@ OP5:
 OP9:    
         ## SE/SNE Vx, Vy
         ## Load Vx into rcx
-        mov %rcx, %rax
-        and %rcx, 0x0F00
-        shr %rcx, 8
-        lea %rdx, regs
-        mov %rsi, %rdx          # rsi will be used for loading Vy
-        add %rdx, %rcx
-        xor %rcx, %rcx
-        mov %cl, BYTE PTR [%rdx]
+        LOAD_Vx %rdx
         ## And Vy into rdx
-        mov %rdx, %rax
-        and %rdx, 0x00F0
-        shr %rdx, 4
-        add %rsi, %rdx
-        xor %rdx, %rdx
-        mov %dl, BYTE PTR [%rsi]
+        LOAD_Vy %rsi
         ## Compare Vx and Vy
         mov %rsi, %rax
         shr %rsi, 12
@@ -145,6 +138,8 @@ case9:  # SNE case
         jmp inc_and_return
 OP6:
         ## LD Vx, byte
+        LOAD_Vx %rdx
+        
         jmp inc_and_return
 OP7:
         ## ADD Vx, byte
