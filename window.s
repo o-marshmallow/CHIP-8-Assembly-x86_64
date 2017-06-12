@@ -4,7 +4,15 @@
         .set WIDTH, 640         # 64 blocs of 10 pixels each
         .set HEIGHT, 320
         .text
-        
+        .macro SET_COLOR code
+        xor %rax, %rax
+        mov %rdi, %r13
+        mov %rsi, \code
+        mov %rdx, \code
+        mov %rcx, \code
+        mov %r8,  0xFF
+        call SDL_SetRenderDrawColor
+        .endm
 window_loop:
         push %rbp
         mov %rbp, %rsp
@@ -24,13 +32,7 @@ window_loop:
         cmp %r12, 0
         je error
         ## Set color to white
-        xor %rax, %rax
-        mov %rdi, %r13
-        mov %rsi, 0xFF
-        mov %rdx, 0xFF
-        mov %rcx, 0xFF
-        mov %r8,  0xFF
-        call SDL_SetRenderDrawColor
+        SET_COLOR 0xFF
 
         ## Init the CPU and main loop
         call load_jumptable
@@ -52,13 +54,17 @@ endevt:
         ## Execute an instruction of the CHIP-8 machine
         call execute_cpu
         ## Should clean the screen here first with SDL_RenderClear
+        SET_COLOR 0x00
+        call SDL_RenderClear
+        SET_COLOR 0xFF
         ## Draw rectangles depending on the screen informations
         mov %rdi, %r13
         call render_screen
         ## Render window
         mov %rdi, %r13
         call SDL_RenderPresent
-        pause
+        mov %rdi, 5000
+        call SDL_Delay
         jmp begin
         
         ## Destroy
