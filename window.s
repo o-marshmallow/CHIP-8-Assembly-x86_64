@@ -3,7 +3,6 @@
         .set SDL_INIT_VIDEO, 0x20
         .set WIDTH, 640         # 64 blocs of 10 pixels each
         .set HEIGHT, 320
-        .text
         .macro SET_COLOR code
         xor %rax, %rax
         mov %rdi, %r13
@@ -13,11 +12,15 @@
         mov %r8,  0xFF
         call SDL_SetRenderDrawColor
         .endm
+        .text
+	
 window_loop:
-        push %rbp
-        mov %rbp, %rsp
-        sub %rsp, 16
+	## Init the video driver
+	mov %rdi, SDL_INIT_VIDEO
+	call SDL_Init
         ## Window will be stored in rsp, whereas renderer is in rsp+8
+        sub %rsp, 16
+	xor %rax, %rax
         mov %rdi, WIDTH
         mov %rsi, HEIGHT
         xor %rdx, %rdx
@@ -63,8 +66,8 @@ endevt:
         ## Render window
         mov %rdi, %r13
         call SDL_RenderPresent
-        mov %rdi, 5000
-        call SDL_Delay
+        #mov %rdi, 5000
+        #call SDL_Delay
         jmp begin
         
         ## Destroy
@@ -73,7 +76,6 @@ dtroy:  xor %rax, %rax
         call SDL_DestroyWindow
         call SDL_Quit
 return: add %rsp, 16
-        pop %rbp
         ret
 
 error:  xor %rax, %rax
