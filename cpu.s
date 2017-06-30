@@ -196,11 +196,11 @@ load_instruction:
         ## Load current instruction
         ## Load ram[pc] into ah
         lea %rax, [ram]
-        add %rax, WORD PTR [pc]
+        add %ax, WORD PTR [pc]
         mov %ah, BYTE PTR [%rax]
         ## Load ram[pc+1] into al
         lea %rbx, [ram]
-        add %rbx, WORD PTR [pc]
+        add %bx, WORD PTR [pc]
         inc %rbx
         mov %al, BYTE PTR [%rbx]
         ## Set rax highest bits to 0
