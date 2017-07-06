@@ -27,10 +27,10 @@ col:    cmp %rdx, 64            # 64 columns
 
         mov %rcx, %rdx
         imul %rcx, PIXEL_SIZE   # X = j*10
-        mov [x], %rcx
+        mov DWORD PTR [x], %ecx
         mov %rcx, %rsi
         imul %rcx, PIXEL_SIZE   # Y = i*10
-        mov [y], %rcx
+        mov DWORD PTR [y], %ecx
 
         push %rdi
         push %rsi
@@ -73,11 +73,11 @@ rcol:   cmp %rdx, PIXEL_SIZE    # 10 columns
         ## Y in rdx
         push %rsi
         
-        mov %rsi, [x]
+        mov %esi, DWORD PTR [x]
         add %rsi, %rdx
         
         pop %rdx
-        add %rdx, [y]
+        add %edx, DWORD PTR [y]
         
         call SDL_RenderDrawPoint
         

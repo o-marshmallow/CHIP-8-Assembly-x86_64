@@ -66,8 +66,8 @@ endevt:
         ## Render window
         mov %rdi, %r13
         call SDL_RenderPresent
-        #mov %rdi, 5000
-        #call SDL_Delay
+        mov %rdi, 10
+        call SDL_Delay
         jmp begin
         
         ## Destroy

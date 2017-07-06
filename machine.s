@@ -28,5 +28,5 @@ sp:     .space 1
 ireg:   .space 2
 dt:     .space 2
 st:     .space 2
-stack:  .space 0xF*2            # Stack is 16 16-bit array
+stack:  .space 16*2             # Stack is 16 16-bit array
 screen: .space 64*32            # Screen size is 64*32 pixels

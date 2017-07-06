@@ -4,7 +4,7 @@
         .set BUFS, 0x400
         .text
 
-main:      
+main:
         cmp %rdi, 2
         jne invalid
         ## Open rom file
@@ -33,7 +33,7 @@ main:
         ## ROM loaded, we can set up the window
         lea %rdi, loaded
         xor %rax, %rax
-        call printf
+	call printf
         call window_loop
         ret
         

@@ -265,12 +265,12 @@ load_jumptable:
         .data
 jmptable:
         ## This jump table is used for performance
-        ## This table contains 0xF (16) 64-bit address
+        ## This table contains 0x10 (16) 64-bit address
         ## Cell i contains the address of the code executing
         ## instructions starting with i
         ## Example: instruction 00E0 will be executed by the code
         ## located at the address contained in the 0 indexed cell
-        .space (0xF*PTR_SIZE)
+        .space (0x10*PTR_SIZE)
 
 s_unknown:
         .asciz "Unknown opcode %04X\nExiting now...\n"
