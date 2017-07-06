@@ -29,10 +29,10 @@ opcode_d:
         xor %r9, %r9
         mov %r9w, WORD PTR [ireg] 
         lea %r9, [ram+%r9]     # r9 = ram+I
-        LOAD_Vx
-        mov %rax, %rcx          # Vx in rax
         LOAD_Vy
         mov %rbx, %rdx          # Vy in rbx
+        LOAD_Vx
+        mov %rax, %rcx          # Vx in rax
         mov %rcx, [%rsp]
         and %rcx, 0xF           # N in rcx
         xor %rdi, %rdi          # i in rdi
