@@ -161,11 +161,11 @@ OPB:
         jmp return
 OPC:
         ## RND Vx, byte
-	rdrand %rdi
-        ## Load &Vx and kk
+	## Load &Vx and kk
         ADDR_Vx                 
         mov %rdx, %rax
         and %rdx, 0xFF
+	mov %edi, 0xF
         add %dl, %dil           # kk += random
         mov BYTE PTR [%rcx], %dl
         jmp inc_and_return
