@@ -9,7 +9,7 @@
 opcode_8:
         mov %rcx, %rax
         and %rcx, 0xF
-        mov %rcx, [jmptable+%rcx]
+        mov %rcx, [jmptable8+%rcx*PTR_SIZE]
         jmp %rcx
 ld_8:
         ## LD Vx, Vy
@@ -113,41 +113,41 @@ load_jumptable_8:
         push %rbp
         mov %rbp, %rsp
         lea %rax, ld_8
-        mov [jmptable], %rax
+        mov [jmptable8], %rax
         lea %rax, or_8
-        mov [jmptable+1*PTR_SIZE], %rax
+        mov [jmptable8+1*PTR_SIZE], %rax
         lea %rax, and_8
-        mov [jmptable+2*PTR_SIZE], %rax
+        mov [jmptable8+2*PTR_SIZE], %rax
         lea %rax, xor_8
-        mov [jmptable+3*PTR_SIZE], %rax
+        mov [jmptable8+3*PTR_SIZE], %rax
         lea %rax, add_8
-        mov [jmptable+4*PTR_SIZE], %rax
+        mov [jmptable8+4*PTR_SIZE], %rax
         lea %rax, sub_8
-        mov [jmptable+5*PTR_SIZE], %rax
+        mov [jmptable8+5*PTR_SIZE], %rax
         lea %rax, shr_8
-        mov [jmptable+6*PTR_SIZE], %rax
+        mov [jmptable8+6*PTR_SIZE], %rax
         lea %rax, subn_8
-        mov [jmptable+7*PTR_SIZE], %rax
+        mov [jmptable8+7*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+8*PTR_SIZE], %rax
+        mov [jmptable8+8*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+9*PTR_SIZE], %rax
+        mov [jmptable8+9*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+10*PTR_SIZE], %rax
+        mov [jmptable8+10*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+11*PTR_SIZE], %rax
+        mov [jmptable8+11*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+12*PTR_SIZE], %rax
+        mov [jmptable8+12*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+13*PTR_SIZE], %rax
+        mov [jmptable8+13*PTR_SIZE], %rax
         lea %rax, shl_8
-        mov [jmptable+14*PTR_SIZE], %rax
+        mov [jmptable8+14*PTR_SIZE], %rax
         lea %rax, unknown_opcode
-        mov [jmptable+15*PTR_SIZE], %rax
+        mov [jmptable8+15*PTR_SIZE], %rax
         pop %rbp
         ret
         
         .data
-jmptable:
+jmptable8:
         ## See description of the jumptable in cpu.s
-        .space (0xF*PTR_SIZE)
+        .space (0x10*PTR_SIZE)

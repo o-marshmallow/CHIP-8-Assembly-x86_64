@@ -19,8 +19,8 @@ execute_cpu:
         lea %rsi, jmptable
         add %rsi, %rdi          
         mov %rsi, [%rsi]        # rsi = jmptable[nibble] (jmptable as void*)
-        jmp %rsi
-        ## From here, only %rax is used
+debug:	jmp %rsi
+	## From here, only %rax is used
 OP0:    cmp %rax, 0x00E0
         jne RET
         ## CLS
@@ -28,7 +28,7 @@ OP0:    cmp %rax, 0x00E0
         xor %rsi, %rsi
         mov %rdx, 64*32         # Number of integers for screen array
         call memset
-        jmp inc_and_return
+	jmp inc_and_return
         
 RET:    cmp %rax, 0x00EE
         jne unknown_opcode
@@ -63,7 +63,8 @@ OP2:
         ## Load PC into RCX
         xor %rcx, %rcx
         mov %cx, WORD PTR [pc]
-        ## Put PC onto the stack
+        ## Put the NEXT PC onto the stack
+	add %cx, 2
         mov WORD PTR [%rdx], %cx
         ## Change the PC and finish this instruction
         and %rax, 0x0FFF        # Rax contains the address to jump to
@@ -160,11 +161,7 @@ OPB:
         jmp return
 OPC:
         ## RND Vx, byte
-        ## For randomness, let's take the current clock
-        push %rax
-        rdtsc
-        mov %rdi, %rax
-        pop %rax
+	rdrand %rdi
         ## Load &Vx and kk
         ADDR_Vx                 
         mov %rdx, %rax

@@ -27,10 +27,11 @@ window_loop:
         lea %rcx, [%rsp]
         lea %r8 , [%rsp+8] 
         call SDL_CreateWindowAndRenderer
-        ## Store Window in R12 and Renderer in R13
+        ## Store Window in R12, Renderer in R13 and DT counter in R14
         ## As their address is not needed anymore
         mov %r12, [%rsp]
         mov %r13, [%rsp+8]
+	xor %r14, %r14
         ## Test whether window is null or not
         cmp %r12, 0
         je error
@@ -66,8 +67,15 @@ endevt:
         ## Render window
         mov %rdi, %r13
         call SDL_RenderPresent
-        mov %rdi, 10
+        mov %rdi, 8
         call SDL_Delay
+	## Increment DT if needed
+	cmp WORD PTR [dt], 0
+	je begin
+	inc %r14
+	and %r14, 0x1
+	jz begin
+	dec WORD PTR [dt]
         jmp begin
         
         ## Destroy
