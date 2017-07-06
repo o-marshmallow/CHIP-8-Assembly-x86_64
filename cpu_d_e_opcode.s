@@ -22,10 +22,10 @@ ret_sh: pop %r10
         
 opcode_d:
         push %rbx
-        push %rax
         push %r9
         push %r10
         push %r11
+        push %rax
         xor %r9, %r9
         mov %r9w, WORD PTR [ireg] 
         lea %r9, [ram+%r9]     # r9 = ram+I
@@ -45,7 +45,7 @@ for1:   cmp %rdi, %rcx
 for2:   cmp %rsi, 8
         je inci
         ## Body of the loop
-        xor %r10, 7             # bit in r11
+        mov %r10, 7             # "bit" variable in r11
         sub %r10, %rsi
         mov %r11, %r8
         call shift_r11
@@ -72,9 +72,9 @@ next:   ## End of loop body
         jmp for2
 inci:   inc %rdi
         jmp for1
-return: pop %r11
+return: pop %rax
+        pop %r11
         pop %r10
         pop %r9
-        pop %rax
         pop %rbx
         ret
