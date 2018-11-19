@@ -5,3 +5,6 @@ ASMF=machine.s main.s window.s render.s cpu.s cpu_8_opcode.s cpu_f_opcode.s cpu_
 
 all:
 	$(CC) $(ASMF) -o $(BIN) $(CFLAGS)
+
+mrproper:
+	rm -f $(BIN)

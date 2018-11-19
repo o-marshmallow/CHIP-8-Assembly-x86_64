@@ -6,9 +6,75 @@
         .include "macros.s"
         .text
 
-        ## Controls are not working for the moment
-opcode_e: ret
+keyindex: # Static and constant data
+        .byte 39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 4, 5, 6, 7, 8, 9 
+        
+        ## Routine from converting 0-9 and A-F values to an SDL key state array
+        ## index. These values were taken from SDL2/SDL_scancode.h file.
+get_key_index:
+        ## RAX contains the key value
+        lea %rsi, keyindex
+        add %rsi, %rdi
+        xor %rax, %rax
+        mov %al, BYTE PTR [%rsi]
+        ret
 
+        
+        ## Opcode for inputs, only RAX is used here
+opcode_e:
+        push %r12       # R12+ are callee-saved registers
+        mov %r12, %rax  # Put instruction in R12
+        
+        # Store Vx value in RCX
+        LOAD_VX
+
+        # Check Vx value (must be < 0x10)
+        cmp %rcx, 0x10
+        jge ret_opE
+
+        # Store Vx index in RCX
+        mov %rdi, %rcx
+        call get_key_index
+        mov %rcx, %rax
+        
+        # Check if key is pressed (using key states array)
+        # and store the result in RCX again
+        xor %rdi, %rdi  # Pass NULL as first argument
+        call SDL_GetKeyboardState
+        mov %rcx, [%rax + %rcx]
+        
+        # Check the instruction
+        mov %rax, %r12
+        and %rax, 0xFF
+        cmp %rax, 0x9E
+        jne not_9e
+
+        # EX9E instruction, skip if RCX is NOT zero (key pressed)
+        test %rcx, %rcx
+        jnz ret_skip
+        jmp ret_opE
+        
+not_9e: cmp %rax, 0xA1
+        jne not_a1
+        # EXA1 instruction, skip if RCX is zero (key NOT pressed)
+        test %rcx, %rcx
+        jz ret_skip
+        jmp ret_opE
+        
+not_a1: # Unknown opcode
+        mov %rax, %r12  # Get original instruction back
+        pop %r12
+        jne unknown_opcode
+        # Never return
+ret_skip:
+        inc WORD PTR [pc]
+        inc WORD PTR [pc]
+ret_opE:
+        pop %r12
+        ret
+
+
+        
         ## Shifts r11 register r10 times
 shift_r11:
         push %r10

@@ -19,7 +19,7 @@ execute_cpu:
         lea %rsi, jmptable
         add %rsi, %rdi          
         mov %rsi, [%rsi]        # rsi = jmptable[nibble] (jmptable as void*)
-debug:	jmp %rsi
+        jmp %rsi
 	## From here, only %rax is used
 OP0:    cmp %rax, 0x00E0
         jne RET
@@ -165,8 +165,9 @@ OPC:
         ADDR_Vx                 
         mov %rdx, %rax
         and %rdx, 0xFF
-	mov %edi, 0xF
-        add %dl, %dil           # kk += random
+        rdrand %edi
+        jnc rand
+        and %dl, %dil           # kk |= random
         mov BYTE PTR [%rcx], %dl
         jmp inc_and_return
 OPD:
