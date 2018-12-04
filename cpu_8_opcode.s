@@ -50,37 +50,30 @@ add_8:
         mov %rdi, %rcx          # &Vx in rdi
         LOAD_Vx                 # Vx in rcx
         LOAD_Vy                 # Vy in rdx
-        add %cx, %dx
+        add %cl, %dl
         mov BYTE PTR [%rdi], %cl
-        cmp %cx, 0xFF
-        jng return
-        mov BYTE PTR [regs+0xF], 1
-        ret
+	## If overflows, write 1
+	jo  return_f_1
+	jmp return_f_0
 sub_8:
         ## SUB Vx, Vy
         ADDR_Vx
         mov %rdi, %rcx          # &Vx in rdi
         LOAD_Vx                 #  Vx in rcx
         LOAD_Vy                 #  Vy in rdx
-        sub %cx, %dx
+        sub %cl, %dl
         mov BYTE PTR [%rdi], %cl
-        cmp %cx, 0
-        jge return
-        mov BYTE PTR [regs+0xF], 1
-        ret
+        jg  return_f_1
+        jmp return_f_0
 shr_8:
         ## SHR Vx
         LOAD_Vx
         mov %rdx, %rcx          #  Vx in rdx
         ADDR_Vx                 # &Vx in rcx
-        mov %rdi, %rdx
-        and %rdi, 1             # rdi = Vx & 1
-        shr %rdx, 1
+        shr %dl, 1
         mov BYTE PTR [%rcx], %dl
-        cmp %dil, 1
-        jne return
-        mov BYTE PTR [regs+0xF], 1
-        ret
+        jc  return_f_1
+	jmp return_f_0
 subn_8:
         ## SUBN Vx, Vy
         ADDR_Vx
@@ -88,26 +81,24 @@ subn_8:
         LOAD_Vx                 #  Vx in rcx
         LOAD_Vy                 #  Vy in rdx
         xchg %rcx, %rdx
-        sub %cx, %dx
+        sub %cl, %dl
         mov BYTE PTR [%rdi], %cl
-        cmp %cx, 0
-        jge return
-        mov BYTE PTR [regs+0xF], 1
-        ret
+        jg  return_f_1
+        jmp return_f_0	
 shl_8:
         ## SHL Vx, Vy
         LOAD_Vx
         mov %rdx, %rcx          #  Vx in rdx
         ADDR_Vx                 # &Vx in rcx
-        mov %rdi, %rdx
-        shr %rdi, 7             # rdi = Vx >> 7
-        shl %rdx, 1
+        shl %dl, 1
         mov BYTE PTR [%rcx], %dl
-        cmp %dil, 1
-        jne return
+        jc  return_f_1
+return_f_0:
+        mov BYTE PTR [regs+0xF], 0
+	ret
+return_f_1:
         mov BYTE PTR [regs+0xF], 1
-return: ret
-
+	ret
 
 load_jumptable_8:
         push %rbp
